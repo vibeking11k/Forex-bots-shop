@@ -3,7 +3,7 @@ from flask import Flask
 from threading import Thread
 import telebot
 from telebot import types
-import time, json
+import time
 
 # --- Keep Render Alive ---
 app = Flask(__name__)
@@ -25,20 +25,19 @@ except:
 bot = telebot.TeleBot(TOKEN, threaded=True)
 
 BOTS = {
-    "ma_bot": {"name": "MA Cross Bot", "price": 29},
-    "gold_bot": {"name": "Gold Scalper Pro", "price": 49},
-    "rsi_bot": {"name": "RSI Market Master", "price": 39}
+    "ma_bot": {"name": "MA Cross Bot", "price": 199},
+    "gold_bot": {"name": "Gold Scalper Pro", "price": 299},
+    "rsi_bot": {"name": "RSI Market Master", "price": 350}
 }
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['start', 'shop'])
 def start(m):
     markup = types.InlineKeyboardMarkup(row_width=1)
     markup.add(
-        types.InlineKeyboardButton(f"MA Cross Bot - $29", callback_data="buy_ma_bot"),
-        types.InlineKeyboardButton(f"Gold Scalper Pro - $49", callback_data="buy_gold_bot"),
-        types.InlineKeyboardButton(f"RSI Market Master - $39", callback_data="buy_rsi_bot")
+        types.InlineKeyboardButton(f"MA Cross Bot - $199", callback_data="buy_ma_bot"),
+        types.InlineKeyboardButton(f"Gold Scalper Pro - $299", callback_data="buy_gold_bot"),
+        types.InlineKeyboardButton(f"RSI Market Master - $350", callback_data="buy_rsi_bot")
     )
-    # NA THIS MESSAGE CUSTOMER GO SEE WHEN BOT WAKE - NORMAL PRICE STILL DEY
     bot.send_message(m.chat.id, f"FX TRADING MARKET STORE 🚀\n\nWelcome {m.from_user.first_name}!\nChoose a bot to buy with USDT (BEP20):", reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: True)
