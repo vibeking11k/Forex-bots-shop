@@ -3,9 +3,9 @@ from flask import Flask
 from threading import Thread
 import telebot
 from telebot import types
-import time
+import time, json
 
-# --- Keep Render Alive (so e no sleep) ---
+# --- Keep Render Alive ---
 app = Flask(__name__)
 @app.route('/')
 def home(): return "FX Bot Shop is Live!"
@@ -30,8 +30,7 @@ BOTS = {
     "rsi_bot": {"name": "RSI Market Master", "price": 39}
 }
 
-# --- THIS IS WHAT BOT GO SAY WHEN E WAKE / WHEN USER TYPE /start ---
-@bot.message_handler(commands=['start', 'shop'])
+@bot.message_handler(commands=['start'])
 def start(m):
     markup = types.InlineKeyboardMarkup(row_width=1)
     markup.add(
@@ -39,9 +38,8 @@ def start(m):
         types.InlineKeyboardButton(f"Gold Scalper Pro - $49", callback_data="buy_gold_bot"),
         types.InlineKeyboardButton(f"RSI Market Master - $39", callback_data="buy_rsi_bot")
     )
-    # 👇 THIS MESSAGE NA WETIN CUSTOMER GO SEE WHEN BOT WAKE
-    welcome_text = f"👋 Welcome to FOREX BOTS SHOP, {m.from_user.first_name}!\n\n🚀 We sell profitable & tested Forex trading bots.\n\n👇 Choose a bot below to buy with USDT (BEP20):"
-    bot.send_message(m.chat.id, welcome_text, reply_markup=markup)
+    # NA THIS MESSAGE CUSTOMER GO SEE WHEN BOT WAKE - NORMAL PRICE STILL DEY
+    bot.send_message(m.chat.id, f"FX TRADING MARKET STORE 🚀\n\nWelcome {m.from_user.first_name}!\nChoose a bot to buy with USDT (BEP20):", reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle(call):
