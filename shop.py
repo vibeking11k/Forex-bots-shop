@@ -13,7 +13,7 @@ def home():
 
 @bot.message_handler(commands=['start'])
 def start(m):
-    bot.reply_to(m, "✅ Bot is ONLINE! E don wake! Type /shop")
+    bot.reply_to(m, "👋 Welcome to FOREX BOTS SHOP!\n\nWe sell profitable Forex bots.\nType /shop to see available bots.")
 
 # add your other handlers here...
 
