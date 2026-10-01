@@ -1,11 +1,26 @@
+import os
+from flask import Flask
+from threading import Thread
 import telebot
 from telebot import types
-import time, json, traceback
-from datetime import datetime
+import time, json
 
-TOKEN = "8999675221:AAGETCqP4WH0OjbmolIQRolO6Mq3rThsqhY"
-USDT_ADDRESS = "0x307acAdEE363C72C3F388b0aAbE54fF81970DC81"
-ADMIN_ID = 0
+# --- Keep Render Alive ---
+app = Flask(__name__)
+@app.route('/')
+def home(): return "FX Bot Shop is Live!"
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
+Thread(target=run_web, daemon=True).start()
+
+# --- Config from Render ---
+TOKEN = os.getenv("BOT_TOKEN", "8999675221:AAGETCqP4WH0QjbmolIQRoI06Mq3rThsqhY")
+USDT_ADDRESS = "0x307acAdEE363C72C3F388b0AaBE54f81970DC8E" # your USDT address
+try:
+    ADMIN_ID = int(os.getenv("ADMIN_ID", "7214398339"))
+except:
+    ADMIN_ID = 7214398339
 
 bot = telebot.TeleBot(TOKEN, threaded=True)
 
@@ -17,16 +32,13 @@ BOTS = {
 
 @bot.message_handler(commands=['start'])
 def start(m):
-    global ADMIN_ID
-    if ADMIN_ID == 0:
-        ADMIN_ID = m.chat.id
     markup = types.InlineKeyboardMarkup(row_width=1)
     markup.add(
-        types.InlineKeyboardButton("MA Cross Bot - $29", callback_data="buy_ma_bot"),
-        types.InlineKeyboardButton("Gold Scalper Pro - $49", callback_data="buy_gold_bot"),
-        types.InlineKeyboardButton("RSI Master Bot - $39", callback_data="buy_rsi_bot")
+        types.InlineKeyboardButton(f"MA Cross Bot - $29", callback_data="buy_ma_bot"),
+        types.InlineKeyboardButton(f"Gold Scalper Pro - $49", callback_data="buy_gold_bot"),
+        types.InlineKeyboardButton(f"RSI Market Master - $39", callback_data="buy_rsi_bot")
     )
-    bot.send_message(m.chat.id, f"FX TRADING MARKET STORE\n\nChoose bot to buy:\nInstant delivery after USDT payment", reply_markup=markup)
+    bot.send_message(m.chat.id, f"FX TRADING MARKET STORE 🚀\n\nWelcome {m.from_user.first_name}!\nChoose a bot to buy with USDT (BEP20):", reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle(call):
@@ -35,21 +47,18 @@ def handle(call):
         uid = call.from_user.id
         if call.data.startswith("buy_"):
             bot_id = call.data.replace("buy_", "")
-            b = BOTS[bot_id]
-            markup = types.InlineKeyboardMarkup()
-            markup.add(types.InlineKeyboardButton(f"I Have Paid ${b['price']}", callback_data=f"paid_{bot_id}"))
-            bot.send_message(uid, f"*{b['name']} - ${b['price']}*\n\nPAY HERE:\n`{USDT_ADDRESS}`\n\nUse BEP20 only!", parse_mode="Markdown", reply_markup=markup)
-        elif call.data.startswith("paid_"):
-            bot.send_message(uid, "Send your payment screenshot now! Admin will verify in 5 mins.")
-            if ADMIN_ID != 0:
-                try: bot.send_message(ADMIN_ID, f"NEW PAYMENT from {uid}")
-                except: pass
+            if bot_id in BOTS:
+                b = BOTS[bot_id]
+                text = f"✅ You selected: {b['name']}\n💰 Price: ${b['price']}\n\n💸 Send ${b['price']} USDT (BEP20) to:\n`{USDT_ADDRESS}`\n\nAfter payment, send screenshot or TX hash. Admin will verify and send bot file.\n\nYour ID: {uid}"
+                bot.send_message(call.message.chat.id, text, parse_mode="Markdown")
+                bot.send_message(ADMIN_ID, f"🔔 New order!\nUser: {uid} @{call.from_user.username}\nBot: {b['name']} - ${b['price']}")
     except Exception as e:
         print(e)
 
-print("STORE STARTING... 24/7 ACTIVE")
+print("Bot starting polling...")
 while True:
     try:
-        bot.infinity_polling(timeout=60, long_polling_timeout=60, none_stop=True)
-    except:
+        bot.infinity_polling(timeout=60, long_polling_timeout=60)
+    except Exception as e:
+        print(f"Polling error: {e}")
         time.sleep(5)
