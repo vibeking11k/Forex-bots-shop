@@ -8,7 +8,7 @@ import requests
 
 app = Flask(__name__)
 @app.route('/')
-def home(): return "FX Bot Shop is Live!"
+def home(): return "FOREX BOTS SHOP is Live!"
 def run_web():
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
@@ -17,6 +17,7 @@ Thread(target=run_web, daemon=True).start()
 TOKEN = os.getenv("BOT_TOKEN", "8999675221:AAGETCqP4WH0QjbmolIQRoI06Mq3rThsqhY")
 USDT_ADDRESS = "0x307acAdEE363C72C3F388b0AaBE54f81970DC8E"
 BSCSCAN_API_KEY = os.getenv("BSCSCAN_API_KEY", "YOUR_BSCSCAN_KEY")
+SUPPORT_HANDLE = "@MANAGEMENTSPONSORSHIP"
 try:
     ADMIN_ID = int(os.getenv("ADMIN_ID", "7214398339"))
 except:
@@ -25,28 +26,15 @@ except:
 bot = telebot.TeleBot(TOKEN, threaded=True)
 
 BOTS = {
-    "ma_bot": {"name": "MA Cross Bot", "price": 199},
-    "gold_bot": {"name": "Gold Scalper Pro", "price": 299},
-    "rsi_bot": {"name": "RSI Market Master", "price": 350}
+    "ma_bot": {"name": "MA Cross PRO EA", "short": "M1 MA Cross - Prop Firm Approved", "price": 399, "reg": 499},
+    "gold_bot": {"name": "Gold Scalper Pro", "short": "M1 Gold Scalper - Prop Firm Approved", "price": 799, "reg": 899},
+    "rsi_bot": {"name": "RSI Market Master", "short": "M5 RSI Master - All Markets", "price": 549, "reg": 649}
 }
 
 pending_payments = {}
 paid_tx = set()
 
-RISK_DISCLAIMER = (
-    "⚠️ RISK DISCLAIMER:\n"
-    "Trading Forex, Gold & Crypto involves substantial risk of loss and is not suitable for every investor. "
-    "Past performance is not indicative of future results. Our bots are tools to assist trading, not a guarantee of profit. "
-    "Trade only with money you can afford to lose. We are not financial advisors."
-)
-
-FAKE_ALERT_NOTE = (
-    "🔒 ANTI-FAKE ALERT SYSTEM:\n"
-    "Our system AUTO-VERIFIES all payments directly on BSC blockchain every 30 seconds. "
-    "Fake alerts, edited screenshots, or spoofed transactions will be AUTOMATICALLY REJECTED. "
-    "Only confirmed on-chain payments will trigger delivery."
-)
-
+# AUTO CHECK EVERY 30 SEC
 def check_payments():
     while True:
         try:
@@ -59,12 +47,12 @@ def check_payments():
                     if tx.get("to","").lower() == USDT_ADDRESS.lower():
                         value = int(tx.get("value",0)) / (10 ** int(tx.get("tokenDecimal",18)))
                         for user_id, order in list(pending_payments.items()):
-                            if abs(value - order["price"]) < 0.5:
+                            if abs(value - order["price"]) < 1:
                                 paid_tx.add(tx_hash)
                                 b = BOTS[order["bot_id"]]
                                 try:
-                                    bot.send_message(user_id, f"✅ PAYMENT CONFIRMED ON-CHAIN!\n${value} received\nTX: {tx_hash}\n\nSending your {b['name']}...")
-                                    bot.send_message(user_id, f"🎉 Here is your {b['name']}! Thanks for buying.\n\n{RISK_DISCLAIMER}")
+                                    bot.send_message(user_id, f"✅ PAYMENT CONFIRMED ON-CHAIN!\n\nAmount: ${value}\nTX: {tx_hash}\n\nYour {b['name']} file is being delivered...")
+                                    bot.send_message(user_id, f"🎉 DELIVERED: {b['name']}\n\nThanks for your purchase! Check your files.")
                                     bot.send_message(ADMIN_ID, f"✅ AUTO PAID! User {user_id} paid ${value} for {b['name']}\nTX: {tx_hash}")
                                     del pending_payments[user_id]
                                 except: pass
@@ -76,24 +64,26 @@ Thread(target=check_payments, daemon=True).start()
 
 @bot.message_handler(commands=['start','shop'])
 def start(m):
+    welcome_text = (
+        f"🏦 FXSTORE - PREMIUM FOREX BOTS\n\n"
+        f"Trusted by 3,200+ Traders Worldwide\n\n"
+        f"✨ Limited Offer: $100 OFF All Bots\n"
+        f"⚡ Instant Auto-Delivery (30 seconds)\n"
+        f"🔒 Verified & Secure Payments\n"
+        f"🛡️ 30-Day Refund Guarantee\n\n"
+        f"⚠️ SCAM ALERT PROTECTION:\n"
+        f"We NEVER DM you first. Our only official wallet is the one shown after you select a bot. Beware of impersonators.\n\n"
+        f"⚠️ RISK DISCLAIMER:\n"
+        f"Trading involves substantial risk of loss. Past performance is not guarantee of future results. Trade at your own risk.\n\n"
+        f"Please select your trading bot below to proceed:"
+    )
     markup = types.InlineKeyboardMarkup(row_width=1)
     markup.add(
-        types.InlineKeyboardButton(f"MA Cross Bot - $199", callback_data="buy_ma_bot"),
-        types.InlineKeyboardButton(f"Gold Scalper Pro - $299", callback_data="buy_gold_bot"),
-        types.InlineKeyboardButton(f"RSI Market Master - $350", callback_data="buy_rsi_bot")
+        types.InlineKeyboardButton(f"🤖 MA Cross PRO EA - ${BOTS['ma_bot']['price']} (Reg. ${BOTS['ma_bot']['reg']})", callback_data="buy_ma_bot"),
+        types.InlineKeyboardButton(f"🤖 Gold Scalper Pro - ${BOTS['gold_bot']['price']} (Reg. ${BOTS['gold_bot']['reg']})", callback_data="buy_gold_bot"),
+        types.InlineKeyboardButton(f"🤖 RSI Market Master - ${BOTS['rsi_bot']['price']} (Reg. ${BOTS['rsi_bot']['reg']})", callback_data="buy_rsi_bot")
     )
-    welcome = (
-        f"FX TRADING MARKET STORE 🚀\n\n"
-        f"Welcome {m.from_user.first_name}!\n\n"
-        f"{FAKE_ALERT_NOTE}\n\n"
-        f"Choose a bot to buy with USDT (BEP20):\n\n"
-        f"{RISK_DISCLAIMER}"
-    )
-    bot.send_message(m.chat.id, welcome, reply_markup=markup)
-
-@bot.message_handler(commands=['terms','risk','disclaimer'])
-def terms(m):
-    bot.send_message(m.chat.id, f"{FAKE_ALERT_NOTE}\n\n{RISK_DISCLAIMER}")
+    bot.send_message(m.chat.id, welcome_text, reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle(call):
@@ -105,16 +95,34 @@ def handle(call):
             if bot_id in BOTS:
                 b = BOTS[bot_id]
                 pending_payments[uid] = {"bot_id": bot_id, "price": b["price"], "time": time.time()}
-                text = (
-                    f"✅ You selected: {b['name']}\n💰 Price: ${b['price']}\n\n"
-                    f"💸 Send EXACT ${b['price']} USDT (BEP20) to:\n`{USDT_ADDRESS}`\n\n"
-                    f"{FAKE_ALERT_NOTE}\n\n"
-                    f"🤖 Bot will AUTO DETECT payment every 30 seconds. No screenshot needed - fake alert will fail.\n\n"
-                    f"{RISK_DISCLAIMER}\n\nYour ID: {uid}"
+                payment_text = (
+                    f"🤖 {b['name']}\n"
+                    f"📊 {b['short']}\n\n"
+                    f"💰 Price: ${b['price']} ~~${b['reg']}~~\n"
+                    f"You Save: $100\n"
+                    f"--------------------------------\n"
+                    f"💳 PAYMENT INSTRUCTIONS\n\n"
+                    f"Please send EXACTLY ${b['price']} USDT (BEP20) to:\n\n"
+                    f"`{USDT_ADDRESS}`\n\n"
+                    f"⚠️ Important:\n"
+                    f"• Network: BSC (BEP20) ONLY\n"
+                    f"• Send exact amount to auto-verify\n"
+                    f"• Our system monitors the blockchain 24/7\n"
+                    f"• Delivery is automatic within 30-60 seconds after payment\n\n"
+                    f"⚪ Once payment is detected, your file will be delivered instantly.\n\n"
+                    f"🛡️ REFUND POLICY:\n"
+                    f"If bot is not delivered automatically after payment, we refund FULL amount within 1 minute. Contact support.\n\n"
+                    f"⚠️ RISK WARNING: Trading FOREX/GOLD/CRYPTO involves risk. Our EAs do not guarantee profit. Use proper risk management.\n\n"
+                    f"Need help? Contact: {SUPPORT_HANDLE}"
                 )
-                bot.send_message(call.message.chat.id, text, parse_mode="Markdown")
+                bot.send_message(call.message.chat.id, payment_text, parse_mode="Markdown")
+                bot.send_message(ADMIN_ID, f"🔔 New order pending\nUser: {uid} @{call.from_user.username}\nBot: {b['name']} ${b['price']}\nWaiting auto verify...")
     except Exception as e:
         print(e)
+
+@bot.message_handler(commands=['support','help','refund'])
+def support(m):
+    bot.send_message(m.chat.id, f"Need help? Contact {SUPPORT_HANDLE}\n\n🛡️ If bot not delivered after payment, we refund within 1 minute.\n\n⚠️ Trading involves risk.")
 
 print("Bot polling...")
 while True:
