@@ -17,7 +17,7 @@ Thread(target=run_web, daemon=True).start()
 TOKEN = os.getenv("BOT_TOKEN", "8999675221:AAGETCqP4WH0QjbmolIQRoI06Mq3rThsqhY")
 USDT_ADDRESS = "0x307acAdEE363C72C3F388b0AaBE54f81970DC8E"
 BSCSCAN_API_KEY = os.getenv("BSCSCAN_API_KEY", "YOUR_BSCSCAN_KEY")
-SUPPORT_HANDLE = "@MANAGEMENTSPONSORSHIP"
+SUPPORT_HANDLE = "@MANAGEMENTSPORSORSHIP"
 try:
     ADMIN_ID = int(os.getenv("ADMIN_ID", "7214398339"))
 except:
@@ -34,8 +34,9 @@ BOTS = {
 pending_payments = {}
 paid_tx = set()
 
-# AUTO CHECK EVERY 30 SEC
+# AUTO CHECK EVERY 30 SEC - ANTI FAKE ALERT
 def check_payments():
+    print("Auto check started - every 30 sec")
     while True:
         try:
             url = f"https://api.bscscan.com/api?module=account&action=tokentx&address={USDT_ADDRESS}&startblock=0&endblock=99999999&sort=desc&apikey={BSCSCAN_API_KEY}"
@@ -52,12 +53,12 @@ def check_payments():
                                 b = BOTS[order["bot_id"]]
                                 try:
                                     bot.send_message(user_id, f"✅ PAYMENT CONFIRMED ON-CHAIN!\n\nAmount: ${value}\nTX: {tx_hash}\n\nYour {b['name']} file is being delivered...")
-                                    bot.send_message(user_id, f"🎉 DELIVERED: {b['name']}\n\nThanks for your purchase! Check your files.")
+                                    bot.send_message(user_id, f"🎉 DELIVERED: {b['name']}\nThanks for your purchase!")
                                     bot.send_message(ADMIN_ID, f"✅ AUTO PAID! User {user_id} paid ${value} for {b['name']}\nTX: {tx_hash}")
                                     del pending_payments[user_id]
                                 except: pass
         except Exception as e:
-            print(e)
+            print(f"Auto check error: {e}")
         time.sleep(30)
 
 Thread(target=check_payments, daemon=True).start()
@@ -122,11 +123,12 @@ def handle(call):
 
 @bot.message_handler(commands=['support','help','refund'])
 def support(m):
-    bot.send_message(m.chat.id, f"Need help? Contact {SUPPORT_HANDLE}\n\n🛡️ If bot not delivered after payment, we refund within 1 minute.\n\n⚠️ Trading involves risk.")
+    bot.send_message(m.chat.id, f"Need help? Contact {SUPPORT_HANDLE}\n\n🛡️ If bot not delivered after payment, we refund within 1 minute.\n\n⚠️ Trading involves risk of loss.")
 
 print("Bot polling...")
 while True:
     try:
         bot.infinity_polling(timeout=60, long_polling_timeout=60)
-    except:
+    except Exception as e:
+        print(f"Polling error: {e}")
         time.sleep(5)
